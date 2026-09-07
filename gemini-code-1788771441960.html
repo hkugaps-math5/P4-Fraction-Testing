@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>披薩大師：分數冒險傳奇</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @keyframes pop-in {
+      0% { transform: scale(0.9); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .animate-pop { animation: pop-in 0.2s ease-out forwards; }
+    .fraction-line { border-top: 3px solid #1e293b; }
+  </style>
+</head>
+<body class="bg-amber-50 text-slate-800 font-sans min-h-screen flex flex-col items-center p-3 sm:p-6 select-none">
+
+  <div class="w-full max-w-2xl bg-white rounded-3xl shadow-xl border-4 border-amber-400 p-4 sm:p-6 flex flex-col">
+    
+    <div class="flex items-center justify-between border-b-2 border-amber-100 pb-4 mb-4">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 bg-amber-500 rounded-2xl flex items-center justify-center text-white text-2xl shadow-md">
+          🍕
+        </div>
+        <div>
+          <h1 class="text-xl sm:text-2xl font-black text-amber-900 tracking-tight leading-none">披薩大師：分數冒險傳奇</h1>
+          <p class="text-xs sm:text-sm font-semibold text-amber-600">小學數學分數加減法練習</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <div class="bg-amber-100 px-3 py-1.5 rounded-xl border border-amber-300 flex items-center gap-1.5">
+          <span class="text-amber-500 text-lg">⭐</span>
+          <span id="score-display" class="font-extrabold text-amber-900 text-base sm:text-lg">0</span>
+          <span class="text-xs text-amber-700 font-bold">分</span>
+        </div>
+        <div class="bg-orange-100 px-3 py-1.5 rounded-xl border border-orange-300 flex items-center gap-1.5">
+          <span class="text-orange-500 text-lg">🔥</span>
+          <span id="streak-display" class="font-extrabold text-orange-900 text-base sm:text-lg">0</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex flex-wrap gap-2 justify-center mb-5">
+      <button onclick="setLevel(1)" id="lvl-1-btn" class="px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition shadow-sm bg-amber-500 text-white border-2 border-amber-600">
+        🌟 L1: 同分母加減
+      </button>
+      <button onclick="setLevel(2)" id="lvl-2-btn" class="px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition shadow-sm bg-white text-slate-700 border-2 border-slate-200 hover:border-amber-400">
+        🚀 L2: 倍數異分母加減
+      </button>
+      <button onclick="setLevel(3)" id="lvl-3-btn" class="px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition shadow-sm bg-white text-slate-700 border-2 border-slate-200 hover:border-amber-400">
+        👑 L3: 約分與最簡分數
+      </button>
+    </div>
+
+    <div id="game-view" class="flex-1 flex flex-col">
+      <div class="flex justify-between items-center text-xs font-bold text-slate-500 mb-2 px-1">
+        <span id="question-progress">第 1 / 10 題</span>
+        <span id="level-badge" class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded-md uppercase tracking-wider text-[11px]">Level 1</span>
+      </div>
+
+      <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden mb-5">
+        <div id="progress-bar" class="bg-gradient-to-r from-amber-400 to-orange-500 h-full w-1/10 transition-all duration-300"></div>
+      </div>
+
+      <div class="bg-gradient-to-b from-amber-50/50 to-orange-50/30 rounded-2xl border-2 border-amber-200 p-4 sm:p-6 mb-4 flex flex-col items-center">
+        <div class="text-xs font-extrabold text-amber-700 tracking-wider uppercase mb-3 bg-amber-100 px-3 py-1 rounded-full">
+          請計算披薩訂單分數：
+        </div>
+
+        <div class="flex items-center justify-center gap-3 sm:gap-6 my-2 text-2xl sm:text-3xl font-black text-slate-800">
+          <div class="flex flex-col items-center">
+            <span id="f1-num" class="px-2">1</span>
+            <div class="fraction-line w-full"></div>
+            <span id="f1-den" class="px-2">4</span>
+          </div>
+
+          <div id="op-box" class="text-3xl sm:text-4xl text-orange-600 font-extrabold">+</div>
+
+          <div class="flex flex-col items-center">
+            <span id="f2-num" class="px-2">2</span>
+            <div class="fraction-line w-full"></div>
+            <span id="f2-den" class="px-2">4</span>
+          </div>
+
+          <div class="text-3xl sm:text-4xl text-slate-400 font-bold">=</div>
+
+          <div class="bg-white border-2 border-dashed border-amber-400 rounded-xl px-4 py-2 flex items-center justify-center min-w-[70px] text-amber-600 shadow-inner">
+            ?
+          </div>
+        </div>
+      </div>
+
+      <div class="mb-4">
+        <div class="text-xs font-bold text-slate-500 mb-2 px-1">選擇正確答案（需化為最簡分數）：</div>
+        <div id="options-grid" class="grid grid-cols-2 gap-3 sm:gap-4"></div>
+      </div>
+
+      <div id="feedback-card" class="hidden rounded-xl p-3.5 text-center font-bold text-sm transition animate-pop mb-2">
+        <div id="feedback-title" class="text-base font-black"></div>
+        <div id="feedback-desc" class="text-xs font-medium mt-1"></div>
+      </div>
+
+      <div class="mt-auto pt-2 flex justify-end">
+        <button id="next-btn" onclick="nextQuestion()" class="hidden px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-extrabold rounded-xl shadow-md transition flex items-center gap-2">
+          <span>下一題</span>
+          <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </div>
+    </div>
+
+    <div id="summary-view" class="hidden flex-col items-center py-6 text-center animate-pop">
+      <div class="w-20 h-20 bg-amber-100 border-4 border-amber-400 rounded-full flex items-center justify-center text-4xl mb-3 shadow-md">
+        🏆
+      </div>
+      <h2 class="text-2xl sm:text-3xl font-black text-amber-900 mb-1">恭喜完成披薩挑戰！</h2>
+      <p class="text-sm text-slate-600 mb-5">你已成功完成本輪的分數練習！</p>
+
+      <div class="w-full max-w-sm bg-amber-50 border-2 border-amber-200 rounded-2xl p-4 mb-6 grid grid-cols-3 gap-2">
+        <div class="bg-white p-2.5 rounded-xl border border-amber-100 shadow-sm">
+          <div class="text-xs text-slate-500 font-bold">正確率</div>
+          <div id="summary-accuracy" class="text-xl font-black text-amber-600">0%</div>
+        </div>
+        <div class="bg-white p-2.5 rounded-xl border border-amber-100 shadow-sm">
+          <div class="text-xs text-slate-500 font-bold">總得分</div>
+          <div id="summary-score" class="text-xl font-black text-amber-600">0</div>
+        </div>
+        <div class="bg-white p-2.5 rounded-xl border border-amber-100 shadow-sm">
+          <div class="text-xs text-slate-500 font-bold">最高連勝</div>
+          <div id="summary-streak" class="text-xl font-black text-orange-600">0 🔥</div>
+        </div>
+      </div>
+
+      <button onclick="restartGame()" class="w-full max-w-sm bg-amber-500 hover:bg-amber-600 text-white font-extrabold py-3 px-4 rounded-xl shadow-md transition flex items-center justify-center gap-2">
+        <i class="fa-solid fa-rotate-right"></i>
+        <span>再玩一次</span>
+      </button>
+    </div>
+
+  </div>
+
+  <script>
+    function gcd(a, b) {
+      return b === 0 ? a : gcd(b, a % b);
+    }
+
+    function simplifyFraction(n, d) {
+      if (n === 0) return { whole: 0, n: 0, d: 1, text: '0' };
+      const common = gcd(Math.abs(n), Math.abs(d));
+      let simN = n / common;
+      let simD = d / common;
+      let whole = 0;
+
+      if (simN >= simD && simD > 1) {
+        whole = Math.floor(simN / simD);
+        simN = simN % simD;
+      }
+
+      let text = '';
+      if (simN === 0) {
+        text = `${whole}`;
+      } else if (whole > 0) {
+        text = `${whole} ${simN}/${simD}`;
+      } else {
+        text = `${simN}/${simD}`;
+      }
+      return { whole, n: simN, d: simD, text };
+    }
+
+    let currentLevel = 1;
+    let currentQuestionIndex = 0;
+    const totalQuestions = 10;
+    let score = 0;
+    let streak = 0;
+    let maxStreak = 0;
+    let correctCount = 0;
+    let currentQuestion = null;
+    let hasAnswered = false;
+
+    function setLevel(lvl) {
+      currentLevel = lvl;
+      for (let i = 1; i <= 3; i++) {
+        const btn = document.getElementById(`lvl-${i}-btn`);
+        if (i === lvl) {
+          btn.className = "px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition shadow-sm bg-amber-500 text-white border-2 border-amber-600";
+        } else {
+          btn.className = "px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition shadow-sm bg-white text-slate-700 border-2 border-slate-200 hover:border-amber-400";
+        }
+      }
+      document.getElementById('level-badge').textContent = `Level ${lvl}`;
+      restartGame();
+    }
+
+    function generateQuestion(level) {
+      const op = Math.random() > 0.4 ? '+' : '-';
+      let n1, d1, n2, d2;
+
+      if (level === 1) {
+        const possibleDens = [3, 4, 5, 6, 8, 10];
+        d1 = possibleDens[Math.floor(Math.random() * possibleDens.length)];
+        d2 = d1;
+        if (op === '+') {
+          n1 = Math.floor(Math.random() * (d1 - 1)) + 1;
+          const maxN2 = d1 - n1;
+          n2 = maxN2 > 1 ? Math.floor(Math.random() * (maxN2 - 1)) + 1 : 1;
+        } else {
+          n1 = Math.floor(Math.random() * (d1 - 2)) + 2;
+          n2 = Math.floor(Math.random() * (n1 - 1)) + 1;
+        }
+      } else if (level === 2) {
+        const pairs = [
+          { d1: 2, d2: 4 }, { d1: 4, d2: 2 },
+          { d1: 3, d2: 6 }, { d1: 6, d2: 3 },
+          { d1: 4, d2: 8 }, { d1: 8, d2: 4 },
+          { d1: 5, d2: 10 }, { d1: 2, d2: 8 }
+        ];
+        const pair = pairs[Math.floor(Math.random() * pairs.length)];
+        d1 = pair.d1;
+        d2 = pair.d2;
+        if (op === '+') {
+          n1 = Math.floor(Math.random() * (d1 - 1)) + 1;
+          n2 = 1;
+        } else {
+          n1 = d1 - 1;
+          n2 = 1;
+        }
+      } else {
+        const dens = [4, 6, 8, 9, 10, 12];
+        d1 = dens[Math.floor(Math.random() * dens.length)];
+        d2 = d1;
+        if (op === '+') {
+          n1 = Math.floor(Math.random() * (d1 - 2)) + 1;
+          n2 = Math.floor(Math.random() * (d1 - n1)) + 1;
+        } else {
+          n1 = Math.floor(Math.random() * (d1 - 1)) + 2;
+          n2 = Math.floor(Math.random() * (n1 - 1)) + 1;
+        }
+      }
+
+      const commonDen = (d1 * d2) / gcd(d1, d2);
+      const adjN1 = n1 * (commonDen / d1);
+      const adjN2 = n2 * (commonDen / d2);
+      const resultNum = op === '+' ? adjN1 + adjN2 : adjN1 - adjN2;
+      const simplified = simplifyFraction(resultNum, commonDen);
+
+      const optionsSet = new Set();
+      optionsSet.add(simplified.text);
+
+      while (optionsSet.size < 4) {
+        const randN = Math.floor(Math.random() * 5) + 1;
+        const randD = [2, 3, 4, 5, 6, 8, 10][Math.floor(Math.random() * 7)];
+        optionsSet.add(simplifyFraction(randN, randD).text);
+      }
+
+      return {
+        f1: { n: n1, d: d1 },
+        f2: { n: n2, d: d2 },
+        op: op,
+        ans: simplified.text,
+        options: Array.from(optionsSet).sort(() => 0.5 - Math.random()),
+        steps: `${n1}/${d1} ${op} ${n2}/${d2} = ${resultNum}/${commonDen}` + 
+               (simplified.text !== `${resultNum}/${commonDen}` ? ` = ${simplified.text}` : '')
+      };
+    }
+
+    function renderQuestion() {
+      hasAnswered = false;
+      document.getElementById('next-btn').classList.add('hidden');
+      document.getElementById('feedback-card').classList.add('hidden');
+
+      currentQuestion = generateQuestion(currentLevel);
+      document.getElementById('question-progress').textContent = `第 ${currentQuestionIndex + 1} / ${totalQuestions} 題`;
+      document.getElementById('progress-bar').style.width = `${((currentQuestionIndex) / totalQuestions) * 100}%`;
+
+      document.getElementById('f1-num').textContent = currentQuestion.f1.n;
+      document.getElementById('f1-den').textContent = currentQuestion.f1.d;
+      document.getElementById('op-box').textContent = currentQuestion.op;
+      document.getElementById('f2-num').textContent = currentQuestion.f2.n;
+      document.getElementById('f2-den').textContent = currentQuestion.f2.d;
+
+      const grid = document.getElementById('options-grid');
+      grid.innerHTML = '';
+
+      currentQuestion.options.forEach((opt) => {
+        const btn = document.createElement('button');
+        btn.className = "bg-white hover:bg-amber-50 active:scale-95 border-2 border-amber-200 hover:border-amber-400 rounded-2xl p-4 text-center font-black text-xl text-slate-800 shadow-sm transition-all flex items-center justify-center min-h-[64px]";
+        btn.innerHTML = formatFractionHTML(opt);
+        btn.onclick = () => checkAnswer(opt, btn);
+        grid.appendChild(btn);
+      });
+    }
+
+    function formatFractionHTML(str) {
+      if (!str.includes('/')) return `<span>${str}</span>`;
+      const parts = str.split(' ');
+      if (parts.length === 2) {
+        const whole = parts[0];
+        const [n, d] = parts[1].split('/');
+        return `<div class="flex items-center gap-1.5"><span class="text-2xl">${whole}</span><div class="flex flex-col items-center text-lg leading-tight"><span>${n}</span><div class="fraction-line w-full border-slate-700"></div><span>${d}</span></div></div>`;
+      } else {
+        const [n, d] = str.split('/');
+        return `<div class="flex flex-col items-center text-lg leading-tight"><span>${n}</span><div class="fraction-line w-full border-slate-700"></div><span>${d}</span></div>`;
+      }
+    }
+
+    function checkAnswer(selectedOpt, btnElement) {
+      if (hasAnswered) return;
+      hasAnswered = true;
+
+      const isCorrect = (selectedOpt === currentQuestion.ans);
+      const feedbackCard = document.getElementById('feedback-card');
+      const feedbackTitle = document.getElementById('feedback-title');
+      const feedbackDesc = document.getElementById('feedback-desc');
+
+      feedbackCard.classList.remove('hidden');
+      if (isCorrect) {
+        score += 10 + (streak * 2);
+        streak++;
+        if (streak > maxStreak) maxStreak = streak;
+        correctCount++;
+
+        btnElement.classList.add('bg-emerald-100', 'border-emerald-500', 'text-emerald-900');
+        feedbackCard.className = "rounded-xl p-3.5 text-center font-bold text-sm bg-emerald-100 border border-emerald-300 text-emerald-900 animate-pop mb-2";
+        feedbackTitle.innerHTML = '🎉 答對了！太棒了！';
+        feedbackDesc.textContent = `計算過程：${currentQuestion.steps}`;
+      } else {
+        streak = 0;
+        btnElement.classList.add('bg-rose-100', 'border-rose-500', 'text-rose-900');
+        feedbackCard.className = "rounded-xl p-3.5 text-center font-bold text-sm bg-rose-100 border border-rose-300 text-rose-900 animate-pop mb-2";
+        feedbackTitle.innerHTML = '👩‍🍳 答錯囉，再接再厲！';
+        feedbackDesc.textContent = `正確答案是 ${currentQuestion.ans}（${currentQuestion.steps}）`;
+      }
+
+      document.getElementById('score-display').textContent = score;
+      document.getElementById('streak-display').textContent = streak;
+      document.getElementById('next-btn').classList.remove('hidden');
+    }
+
+    function nextQuestion() {
+      currentQuestionIndex++;
+      if (currentQuestionIndex < totalQuestions) {
+        renderQuestion();
+      } else {
+        showSummary();
+      }
+    }
+
+    function showSummary() {
+      document.getElementById('game-view').classList.add('hidden');
+      const summaryView = document.getElementById('summary-view');
+      summaryView.classList.remove('hidden');
+      summaryView.classList.add('flex');
+
+      const acc = Math.round((correctCount / totalQuestions) * 100);
+      document.getElementById('summary-accuracy').textContent = `${acc}%`;
+      document.getElementById('summary-score').textContent = score;
+      document.getElementById('summary-streak').textContent = `${maxStreak} 🔥`;
+    }
+
+    function restartGame() {
+      currentQuestionIndex = 0;
+      score = 0;
+      streak = 0;
+      maxStreak = 0;
+      correctCount = 0;
+      hasAnswered = false;
+
+      document.getElementById('score-display').textContent = '0';
+      document.getElementById('streak-display').textContent = '0';
+      document.getElementById('summary-view').classList.add('hidden');
+      document.getElementById('summary-view').classList.remove('flex');
+      document.getElementById('game-view').classList.remove('hidden');
+
+      renderQuestion();
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      renderQuestion();
+    });
+  </script>
+</body>
+</html>
